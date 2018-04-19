@@ -130,6 +130,7 @@ func Run(ctx context.Context, action Action, actionID string, m *pubsub.Message,
 		if err != nil {
 			ac.OnError(context.Background(), id, err)
 			errored <- err
+			close(done)
 		} else {
 			done <- response
 		}
@@ -139,6 +140,7 @@ func Run(ctx context.Context, action Action, actionID string, m *pubsub.Message,
 		err := <-cerror
 		ac.OnError(context.Background(), id, err)
 		errored <- err
+		close(done)
 	}(action, actionID)
 
 	go func() {

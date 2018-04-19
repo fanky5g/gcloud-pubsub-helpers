@@ -41,9 +41,9 @@ func TestCreateSubscription(t *testing.T) {
 
 type a struct{}
 
-func (action a) Execute(ctx context.Context, id string, data []byte, response chan struct{}, errChan chan error) error {
+func (action a) Execute(ctx context.Context, id string, data []byte, response chan struct{}, errChan chan error) {
 	response <- struct{}{}
-	return nil
+	return
 }
 
 func (action a) OnError(ctx context.Context, id string, err error) {}
@@ -54,6 +54,6 @@ func (action a) OnSuccess(ctx context.Context, id string, response interface{}) 
 func TestListenOnSubscription(t *testing.T) {
 	ctx := context.Background()
 
-	err := ListenOnSubscription(ctx, testClient, "", a{}, "")
+	err := ListenOnSubscription(ctx, testClient, "", a{})
 	assert.NoError(t, err)
 }
