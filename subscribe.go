@@ -9,7 +9,7 @@ import (
 )
 
 // ListenOnSubscription starts a listener that listens on a particular action
-func ListenOnSubscription(ctx context.Context, client *pubsub.Client, subscriptionID string, action Action, actionID string) error {
+func ListenOnSubscription(ctx context.Context, client *pubsub.Client, subscriptionID string, action Action) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -34,6 +34,13 @@ func ListenOnSubscription(ctx context.Context, client *pubsub.Client, subscripti
 		if action != nil {
 			done := make(chan struct{})
 			cerror := make(chan error)
+			if _, ok := m.Attributes["action_id"]; !ok {
+				m.Nack()
+				cancel()
+				return
+			}
+
+			actionID := m.Attributes["action_id"]
 			go Run(ctx, action, actionID, m, done, cerror)
 
 			select {
@@ -55,7 +62,7 @@ func ListenOnSubscription(ctx context.Context, client *pubsub.Client, subscripti
 }
 
 // ListenOnceOnSubscription similar to ListenOnSubscription but closes after receiving once from subscription
-func ListenOnceOnSubscription(ctx context.Context, client *pubsub.Client, subscriptionID string, action Action, actionID string) error {
+func ListenOnceOnSubscription(ctx context.Context, client *pubsub.Client, subscriptionID string, action Action) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -84,6 +91,14 @@ func ListenOnceOnSubscription(ctx context.Context, client *pubsub.Client, subscr
 		// run action
 		done := make(chan struct{})
 		cerror := make(chan error)
+
+		if _, ok := m.Attributes["action_id"]; !ok {
+			m.Nack()
+			cancel()
+			return
+		}
+
+		actionID := m.Attributes["action_id"]
 		go Run(ctx, action, actionID, m, done, cerror)
 
 		select {
