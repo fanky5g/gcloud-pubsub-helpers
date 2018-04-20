@@ -39,10 +39,16 @@ func TestCreateSubscription(t *testing.T) {
 	assert.NotNil(t, sub)
 }
 
+type aResponse struct{}
+
+func (a aResponse) GetVal() interface{} {
+	return nil
+}
+
 type a struct{}
 
-func (action a) Execute(ctx context.Context, id string, data []byte, response chan struct{}, errChan chan error) {
-	response <- struct{}{}
+func (action a) Execute(ctx context.Context, id string, data []byte, response chan ActionResponse, errChan chan error) {
+	response <- aResponse{}
 	return
 }
 

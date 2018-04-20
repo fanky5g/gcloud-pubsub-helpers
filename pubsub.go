@@ -121,18 +121,18 @@ func Run(ctx context.Context, action Action, actionID string, m *pubsub.Message,
 	cancelablectx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	csuccess := make(chan struct{}, 1)
+	cres := make(chan ActionResponse, 1)
 	cerror := make(chan error, 1)
 
 	go func(ac Action, id string) {
-		response := <-csuccess
+		response := <-cres
 		err := ac.OnSuccess(context.Background(), id, response)
 		if err != nil {
 			ac.OnError(context.Background(), id, err)
 			errored <- err
 			close(done)
 		} else {
-			done <- response
+			done <- struct{}{}
 		}
 	}(action, actionID)
 
@@ -149,6 +149,6 @@ func Run(ctx context.Context, action Action, actionID string, m *pubsub.Message,
 		done <- struct{}{}
 	}()
 
-	go action.Execute(cancelablectx, actionID, m.Data, csuccess, cerror)
+	go action.Execute(cancelablectx, actionID, m.Data, cres, cerror)
 	<-done
 }
